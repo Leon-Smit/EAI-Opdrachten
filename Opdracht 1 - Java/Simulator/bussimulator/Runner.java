@@ -94,6 +94,31 @@ public class Runner implements Runnable {
         }
     }
 
+//	Om de tijdsynchronisatie te gebruiken moet de onderstaande run() gebruikt worden
+//
+//	@Override
+//	public void run() {
+//		int tijd=0;
+//		int counter=0;
+//		TijdFuncties tijdFuncties = new TijdFuncties();
+//		tijdFuncties.initSimulatorTijden(interval,syncInterval);
+//		int volgende = initBussen();
+//		while ((volgende>=0) || !actieveBussen.isEmpty()) {
+//			counter=tijdFuncties.getCounter();
+//			tijd=tijdFuncties.getTijdCounter();
+//			System.out.println("De tijd is:" + tijdFuncties.getSimulatorWeergaveTijd());
+//			volgende = (counter==volgende) ? startBussen(counter) : volgende;
+//			moveBussen(tijd);
+//			sendETAs(tijd);
+//			try {
+//				tijdFuncties.simulatorStep();
+//			} catch (InterruptedException e) {
+//				// TODO Auto-generated catch block
+//				e.printStackTrace();
+//			}
+//		}
+//	}
+
     private static class BusInfo {
         Lijnen lijn;
         Bedrijven bedrijf;
