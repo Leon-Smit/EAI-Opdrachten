@@ -37,4 +37,13 @@ type BerichtJSON = {|
       </types:input-event>
     </types:processor-declaration>
   </types:enrichment>
+  <types:enrichment select="#232dd6c2-be46-48d6-88e5-c0776542e66d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="BerichtXML"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
 </types:mule>
