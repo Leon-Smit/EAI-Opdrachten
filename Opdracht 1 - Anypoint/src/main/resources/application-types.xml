@@ -18,6 +18,20 @@ type BerichtJSON = {|
 
 ]]></types:shape>
     </types:type>
+    <types:type name="TijdServerXML" format="xml">
+      <types:example format="xml" element="Tijd" location="examples/tijdserverbericht.xml"/>
+    </types:type>
+    <types:type name="TijdServerJSON" format="json">
+      <types:shape format="weave" example="examples/tijdserverbericht.json"><![CDATA[%dw 2.0
+
+type TijdServerJSON = {|
+  uur: Number {"typeId": "int"}, 
+  minuut: Number {"typeId": "int"}, 
+  seconde: Number {"typeId": "int"}
+|} {"example": "{\\\"uur\\\":5,\\\"minuut\\\":20,\\\"seconde\\\":43}"}
+
+]]></types:shape>
+    </types:type>
   </types:catalog>
   <types:enrichment select="#63902ac1-1d5d-460e-90a0-33dff45d426a">
     <types:processor-declaration>
@@ -38,6 +52,42 @@ type BerichtJSON = {|
     </types:processor-declaration>
   </types:enrichment>
   <types:enrichment select="#232dd6c2-be46-48d6-88e5-c0776542e66d">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="BerichtXML"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#24cf9e76-2891-4836-915a-d701c32951c0">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="TijdServerJSON"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#2cbf649b-a17f-44d1-903e-bd614911c34a">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="TijdServerXML"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#56b0e60c-812b-406b-8c8e-9604b29aa4fb">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="TijdServerJSON"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#77ce16ea-84d6-4a6e-b832-6a8ff0cfa013">
     <types:processor-declaration>
       <types:input-event>
         <types:message>

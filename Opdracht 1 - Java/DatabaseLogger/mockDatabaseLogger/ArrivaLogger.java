@@ -48,6 +48,7 @@ public class ArrivaLogger implements Runnable{
 			connection.close();
 			System.out.println(aantalBerichten + " berichten met " + aantalETAs + " ETAs verwerkt.");
 		} catch (Exception e) {
+			System.out.println(" hallo! ");
 			System.out.println("Caught: " + e);
 			e.printStackTrace();
 		}

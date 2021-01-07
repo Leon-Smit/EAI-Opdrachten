@@ -32,10 +32,10 @@ public class Infobord extends Application {
 	public void verwerkBericht() {
 		if (berichten.hetBordMoetVerverst()) {
 			String[] infoTekstRegels = berichten.repaintInfoBordValues();
-//			InfobordTijdFuncties tijdfuncties = new InfobordTijdFuncties();
-//			
-//			String tijd = tijdfuncties.getCentralTime().toString();
-//			tijdRegel.setText(tijd);
+			InfobordTijdFuncties tijdfuncties = new InfobordTijdFuncties();
+			
+			String tijd = tijdfuncties.getCentralTime().toString();
+			tijdRegel.setText(tijd);
 			
 			infoRegel1.setText(infoTekstRegels[0]);
 			infoRegel2.setText(infoTekstRegels[1]);

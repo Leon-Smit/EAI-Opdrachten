@@ -18,10 +18,12 @@ http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/
 	<flow name="bussimulatorFlow" doc:id="f17189b3-63a3-491c-bf46-f0649e640a49" >
 		<jms:listener doc:name="On New Message" doc:id="63902ac1-1d5d-460e-90a0-33dff45d426a" destination="BUSQUEUE" config-ref="JMS_Config" inboundContentType="application/xml" ackMode="AUTO">
 		</jms:listener>
-		<foreach doc:name="For Each" doc:id="b153c22a-098f-4db4-a0b3-586cd2045b2a" collection="#[payload.Bericht.ETAs]">
-			<async doc:name="Async" doc:id="84467fb5-3748-4145-8155-9f6840ab69e6" >
-				<choice doc:name="Choice" doc:id="53d3ac12-2c4e-4066-8d01-9caf7fec986d">
-					<when expression='#[vars.rootMessage.payload.Bericht.bedrijf == "QBUZZ" and vars.rootMessage.payload.Bericht.eindpunt == vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].halteNaam and vars.counter ~= "1"]'>
+		<choice doc:name="Choice" doc:id="c1d15958-9979-478c-9410-bd8021a5140a" >
+			<when expression='#[payload.Bericht.bedrijf == "QBUZZ"]'>
+				<foreach doc:name="For Each" doc:id="b39f0c0a-2aef-4709-88d9-0390381fa982" collection="#[payload.Bericht.ETAs]">
+					<async doc:name="Async" doc:id="c44789a4-f613-425e-bb86-188ef8069ebd" >
+						<choice doc:name="Choice" doc:id="53d3ac12-2c4e-4066-8d01-9caf7fec986d">
+					<when expression='#[vars.counter ~= "1"]'>
 						<ee:transform doc:name="Transform Message" doc:id="6299379f-0373-4aad-9432-942be320056d">
 							<ee:message>
 								<ee:set-payload><![CDATA[%dw 2.0
@@ -40,11 +42,11 @@ ns ns0 http://soapserver.qbuzz.com/
 }]]></ee:set-payload>
 							</ee:message>
 						</ee:transform>
-						<wsc:consume doc:name="Consume" doc:id="0d23650f-7fd1-4187-8769-ecb5cd6dc7ec" config-ref="QBUZZ_Webservices" operation="receiveBusBijEindpunt" target="response"/>
-						<logger level="INFO" doc:name="Logger" doc:id="3b27e549-90af-4fce-a491-c79edc22cabc" message='#[vars.rootMessage.payload.Bericht.busID]' />
+						<wsc:consume doc:name="Consume" doc:id="0d23650f-7fd1-4187-8769-ecb5cd6dc7ec" config-ref="QBUZZ_Webservices" operation="receiveBusBijEindpunt" target="response" />
+						<logger level="INFO" doc:name="Logger" doc:id="3b27e549-90af-4fce-a491-c79edc22cabc" message='#["&gt;&gt;" ++ vars.rootMessage.payload.Bericht.ETAs[0].aankomsttijd as String]' />
 					</when>
-					<when expression='#[vars.rootMessage.payload.Bericht.bedrijf == "QBUZZ"]'>
-					<ee:transform doc:name="Transform Message" doc:id="218e43f1-8ff6-49db-baa4-773be969220f">
+							<otherwise>
+								<ee:transform doc:name="Transform Message" doc:id="218e43f1-8ff6-49db-baa4-773be969220f">
 							<ee:message>
 								<ee:set-payload><![CDATA[%dw 2.0
 output application/xml
@@ -63,13 +65,12 @@ ns ns0 http://soapserver.qbuzz.com/
 }]]></ee:set-payload>
 							</ee:message>
 						</ee:transform>
-						<wsc:consume doc:name="Consume" doc:id="f2cda402-a0ad-4b17-89b0-e3aaccf8124e" config-ref="QBUZZ_Webservices" operation="receiveBusBijHalte" target="response" />
-						<logger level="INFO" doc:name="Logger" doc:id="2604fe25-850b-44e5-babf-9775a00b971d" message="#[vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1]]"/>
-				</when>
-					<when expression='#[vars.rootMessage.payload.Bericht.bedrijf == "QBUZZ" and false]'>
-						<ee:transform doc:name="Transform Message" doc:id="13439dd4-770f-4908-abb8-12adcc03eba7" >
-							<ee:message >
-								<ee:set-payload ><![CDATA[%dw 2.0
+								<wsc:consume doc:name="Consume" doc:id="f2cda402-a0ad-4b17-89b0-e3aaccf8124e" config-ref="QBUZZ_Webservices" operation="receiveBusBijHalte" target="response" />
+							</otherwise>
+			</choice>
+						<ee:transform doc:name="Transform Message" doc:id="13439dd4-770f-4908-abb8-12adcc03eba7">
+							<ee:message>
+								<ee:set-payload><![CDATA[%dw 2.0
 output application/xml
 ns ns0 http://soapserver.qbuzz.com/
 ---
@@ -80,12 +81,9 @@ ns ns0 http://soapserver.qbuzz.com/
 }]]></ee:set-payload>
 							</ee:message>
 						</ee:transform>
-						<wsc:consume doc:name="Consume" doc:id="471277ae-e323-4f8d-95aa-826af7a03b84" config-ref="QBUZZ_Webservices" operation="logEtas" target="response"/>
-						<logger level="INFO" doc:name="Logger" doc:id="c93c214b-51aa-4499-a064-829cd4e43c24" message="#[vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1]]"/>
-					</when>
-			</choice>
-			</async>
-			<ee:transform doc:name="Transform Message" doc:id="232dd6c2-be46-48d6-88e5-c0776542e66d">
+						<wsc:consume doc:name="Consume" doc:id="471277ae-e323-4f8d-95aa-826af7a03b84" config-ref="QBUZZ_Webservices" operation="logEtas" target="response" />
+					</async>
+					<ee:transform doc:name="Transform Message" doc:id="232dd6c2-be46-48d6-88e5-c0776542e66d">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -100,8 +98,17 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-			<jms:publish doc:name="Publish" doc:id="b05c7c22-89d2-49f6-a077-61d1c648ee63" config-ref="JMS_Config" destination='#["IB:" ++ vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].halteNaam ++ ":" ++ 
+					<jms:publish doc:name="Publish" doc:id="b05c7c22-89d2-49f6-a077-61d1c648ee63" config-ref="JMS_Config" destination='#["IB:" ++ vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].halteNaam ++ ":" ++ 
 vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].richting as String]' />
-		</foreach>
+				</foreach>
+			</when>
+			<when expression='payload.Bericht.bedrijf == "ARRIVA"'>
+				<jms:publish doc:name="Publish" doc:id="77ce16ea-84d6-4a6e-b832-6a8ff0cfa013" config-ref="JMS_Config" destination="ARRIVALOGGER" >
+					<jms:message outboundContentType="application/xml">
+					</jms:message>
+				</jms:publish>
+				<logger level="INFO" doc:name="Logger" doc:id="3cb2dd21-5b19-46db-894a-bcd671d52967" message="#[payload]"/>
+			</when>
+		</choice>
 	</flow>
 </mule>

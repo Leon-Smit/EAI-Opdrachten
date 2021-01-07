@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="efdbef81-246a-45ca-805f-22939172ea8b" >
+		<http:listener-connection host="0.0.0.0" port="8081" doc:name="HTTP Request Configuration" protocol="HTTP"/>
+	</http:listener-config>
+	<flow name="tijdserviceFlow" doc:id="6c08005a-70ae-4525-98f3-dfe5699370d6" >
+		<http:listener doc:name="Listener" doc:id="4863d492-ddc7-4b7f-b109-e1273b147dc8" path="/TijdServer/" config-ref="HTTP_Listener_config"/>
+		<set-variable value='#[attributes.queryParams["responseType"]]' doc:name="Set Variable" doc:id="9d903266-5be7-4ca7-819b-5109b1d2cec5" variableName="responseType"/>
+		<http:request method="GET" doc:name="Request" doc:id="24cf9e76-2891-4836-915a-d701c32951c0" url="http://127.0.0.1:5002/TimeServer"/>
+		<choice doc:name="Choice" doc:id="c7ed6e35-0d12-4b26-90dd-fa9066723c25" >
+			<when expression='#[vars.responseType == "xml"]'>
+				<ee:transform doc:name="Transform Message" doc:id="1813a576-8b03-4487-9781-c4634fd78a89" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+---
+{
+	Tijd: {
+		uur: payload.uur,
+		minuut: payload.minuut,
+		seconde: payload.seconde
+	}
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="2cbf649b-a17f-44d1-903e-bd614911c34a" />
+			</when>
+			<otherwise >
+				<set-payload value="#[payload]" doc:name="Set Payload" doc:id="56b0e60c-812b-406b-8c8e-9604b29aa4fb" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
