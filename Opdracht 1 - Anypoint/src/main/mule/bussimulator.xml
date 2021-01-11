@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap"
-	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
-	xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:apikit-soap="http://www.mulesoft.org/schema/mule/apikit-soap"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/apikit-soap http://www.mulesoft.org/schema/mule/apikit-soap/current/mule-apikit-soap.xsd
-http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
 	<jms:config name="JMS_Config" doc:name="JMS Config" doc:id="d07e01a3-a6c5-4f4a-b73f-ef635fcc8a1c" >
 		<jms:active-mq-connection >
 			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
@@ -15,6 +16,9 @@ http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/
 	<wsc:config name="QBUZZ_Webservices" doc:name="Web Service Consumer Config" doc:id="7fefb8a2-f8e0-4458-bb63-7f5e85e8bc6a" >
 		<wsc:connection wsdlLocation="http://localhost:8888/QBUZZServices?wsdl" service="QbuzzServicesService" port="QbuzzServicesPort" address="http://localhost:8888/QBUZZServices" />
 	</wsc:config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="3fda6efd-d116-4174-96f8-e5a5388144ed" >
+		<db:my-sql-connection host="localhost" port="3306" user="root" password="Test1234" database="buslogging" />
+	</db:config>
 	<flow name="bussimulatorFlow" doc:id="f17189b3-63a3-491c-bf46-f0649e640a49" >
 		<jms:listener doc:name="On New Message" doc:id="63902ac1-1d5d-460e-90a0-33dff45d426a" destination="BUSQUEUE" config-ref="JMS_Config" inboundContentType="application/xml" ackMode="AUTO">
 		</jms:listener>
@@ -36,7 +40,7 @@ ns ns0 http://soapserver.qbuzz.com/
 			busID: vars.rootMessage.payload.Bericht.busID,
 			lijn: vars.rootMessage.payload.Bericht.lijnNaam,
 			eindpunt: vars.rootMessage.payload.Bericht.eindpunt,
-			aankomsttijd: payload.aankomsttijd
+			aankomsttijd: vars.rootMessage.payload.Bericht.tijd
 		}
 	}
 }]]></ee:set-payload>
@@ -68,22 +72,41 @@ ns ns0 http://soapserver.qbuzz.com/
 								<wsc:consume doc:name="Consume" doc:id="f2cda402-a0ad-4b17-89b0-e3aaccf8124e" config-ref="QBUZZ_Webservices" operation="receiveBusBijHalte" target="response" />
 							</otherwise>
 			</choice>
-						<ee:transform doc:name="Transform Message" doc:id="13439dd4-770f-4908-abb8-12adcc03eba7">
-							<ee:message>
-								<ee:set-payload><![CDATA[%dw 2.0
+					</async>
+				</foreach>
+				<async doc:name="Async" doc:id="5d07ec21-bd7f-4ee4-a23e-16b871651aa7" >
+					<ee:transform doc:name="Transform Message" doc:id="ec493193-72ae-418e-800d-18a4d02f9793" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
 output application/xml
-ns ns0 http://soapserver.qbuzz.com/
 ---
 {
-	ns0#logEtas: {
-		etaBericht: vars.rootMessage.payload.Bericht
-	}
 }]]></ee:set-payload>
-							</ee:message>
-						</ee:transform>
-						<wsc:consume doc:name="Consume" doc:id="471277ae-e323-4f8d-95aa-826af7a03b84" config-ref="QBUZZ_Webservices" operation="logEtas" target="response" />
-					</async>
-					<ee:transform doc:name="Transform Message" doc:id="232dd6c2-be46-48d6-88e5-c0776542e66d">
+						</ee:message>
+					</ee:transform>
+					<wsc:consume doc:name="Consume" doc:id="471277ae-e323-4f8d-95aa-826af7a03b84" config-ref="QBUZZ_Webservices" operation="logEtas" target="response" />
+				</async>
+			</when>
+			<when expression='payload.Bericht.bedrijf == "ARRIVA"'>
+				<jms:publish doc:name="Publish" doc:id="77ce16ea-84d6-4a6e-b832-6a8ff0cfa013" config-ref="JMS_Config" destination="ARRIVALOGGER" >
+					<jms:message outboundContentType="application/xml">
+					</jms:message>
+				</jms:publish>
+			</when>
+			<when expression='#[payload.Bericht.bedrijf == "FLIXBUS"]'>
+				<!--  <set-variable value='#[(payload.Bericht.busID as String) ++ "|" ++ (payload.Bericht.eindpunt as String) ++ "|" ++ (payload.Bericht.tijd as String) ++ "|"]' doc:name="Set Variable" doc:id="f30b4372-31b2-4961-86ff-5e1c3a51d9ac" variableName="logString"/> &#>
+				<foreach doc:name="For Each" doc:id="ce7f5692-e40e-40d9-a41b-f1a60cf7e2e5" collection="#[payload.Bericht.ETAs]">
+					<set-variable value='#[(vars.logString.logString) ++ (vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].halteNaam as String) ++ "|" ++ (vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].richting as String) ++ "|" ++ (vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].aankomsttijd as String) ++ "|"]' doc:name="Set Variable" doc:id="7a3e78fe-b487-4873-b091-d08217347e4f" variableName="logString"/>
+				</foreach> -->
+				<set-variable value='#[payload.Bericht.lijnNaam "TestInput123"]' doc:name="Set Variable" doc:id="f8260a5d-7f95-487e-858b-31e1445051f9" variableName="logString"/>
+				<db:insert doc:name="Insert" doc:id="2d744113-9596-48bd-9dea-4e4f36b1d157" config-ref="Database_Config">
+					<db:sql ><![CDATA[INSERT INTO flixbuslog(logrecord) VALUES (:logString)]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'logString': vars.logString }]]]></db:input-parameters>
+				</db:insert>
+			</when>
+		</choice>
+		<foreach doc:name="For Each" doc:id="4bad99bd-e56f-46c6-9cb8-aedf37583bb4" collection="#[payload.Bericht.ETAs]">
+			<ee:transform doc:name="Transform Message" doc:id="232dd6c2-be46-48d6-88e5-c0776542e66d">
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 output application/json
@@ -98,17 +121,8 @@ output application/json
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-					<jms:publish doc:name="Publish" doc:id="b05c7c22-89d2-49f6-a077-61d1c648ee63" config-ref="JMS_Config" destination='#["IB:" ++ vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].halteNaam ++ ":" ++ 
+			<jms:publish doc:name="Publish" doc:id="b05c7c22-89d2-49f6-a077-61d1c648ee63" config-ref="JMS_Config" destination='#["IB:" ++ vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].halteNaam ++ ":" ++ 
 vars.rootMessage.payload.Bericht.ETAs[vars.counter - 1].richting as String]' />
-				</foreach>
-			</when>
-			<when expression='payload.Bericht.bedrijf == "ARRIVA"'>
-				<jms:publish doc:name="Publish" doc:id="77ce16ea-84d6-4a6e-b832-6a8ff0cfa013" config-ref="JMS_Config" destination="ARRIVALOGGER" >
-					<jms:message outboundContentType="application/xml">
-					</jms:message>
-				</jms:publish>
-				<logger level="INFO" doc:name="Logger" doc:id="3cb2dd21-5b19-46db-894a-bcd671d52967" message="#[payload]"/>
-			</when>
-		</choice>
+		</foreach>
 	</flow>
 </mule>
