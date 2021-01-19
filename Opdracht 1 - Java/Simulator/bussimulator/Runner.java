@@ -21,12 +21,15 @@ public class Runner implements Runnable {
         bus.setbusID(starttijd);
     }
 
-    private static int startBussen(int tijd) {
+    private static void startBuses(int tijd) {
         for (Bus bus : busStart.get(tijd)) {
             actieveBussen.add(bus);
         }
         busStart.remove(tijd);
-        return (!busStart.isEmpty()) ? Collections.min(busStart.keySet()) : -1;
+    }
+    
+    private static int getNextWaitingBuses() {
+    	return (!busStart.isEmpty()) ? Collections.min(busStart.keySet()) : -1;
     }
 
     public static void moveBussen(int nu) {
@@ -87,7 +90,14 @@ public class Runner implements Runnable {
 			counter=tijdFuncties.getCounter();
 			tijd=tijdFuncties.getTijdCounter();
 			System.out.println("De tijd is:" + tijdFuncties.getSimulatorWeergaveTijd());
-			volgende = (counter==volgende) ? startBussen(counter) : volgende;
+			
+			if(counter == volgende) {
+				startBuses(counter);
+				volgende = getNextWaitingBuses();
+			} else {
+				volgende = counter;
+			}
+
 			moveBussen(tijd);
 			sendETAs(tijd);
 			try {
