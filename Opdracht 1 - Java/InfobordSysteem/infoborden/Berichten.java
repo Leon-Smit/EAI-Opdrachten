@@ -8,7 +8,7 @@ public class Berichten {
 
 	private HashMap<String, Integer> laatsteBericht = new HashMap<String, Integer>();
 	private HashMap<String, JSONBericht> infoBordRegels = new HashMap<String, JSONBericht>();
-	private int hashValue;
+	private int previousTotalTime;
 	private boolean refresh;
 	private String[] infoTekstRegels;
 
@@ -57,17 +57,17 @@ public class Berichten {
 				}
 			}
 		}
-		refresh = checkRepaint(aantalRegels, aankomsttijden);
+		refresh = checkForRefreshInfobord(aantalRegels, aankomsttijden);
 		infoTekstRegels = infoTekst;
 	}
 
-	private boolean checkRepaint(int aantalRegels, int[] aankomsttijden) {
-		int totaalTijden = 0;
-		for (int i = 0; i < aantalRegels; i++) {
-			totaalTijden += aankomsttijden[i];
+	private boolean checkForRefreshInfobord(int numberOfLines, int[] arrivalTimes) {
+		int totalTime = 0;
+		for (int i = 0; i < numberOfLines; i++) {
+			totalTime += arrivalTimes[i];
 		}
-		if (hashValue != totaalTijden) {
-			hashValue = totaalTijden;
+		if (previousTotalTime != totalTime) {
+			previousTotalTime = totalTime;
 			return true;
 		}
 		return false;
