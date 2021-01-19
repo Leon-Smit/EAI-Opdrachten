@@ -1,7 +1,8 @@
 package bussimulator;
 
-import com.thoughtworks.xstream.XStream;
 import bussimulator.Halte.Positie;
+import bussimulator.parser.Parser;
+import bussimulator.parser.XMLParser;
 
 public class Bus {
 
@@ -80,7 +81,6 @@ public class Bus {
 		for (i = halteNummer + richting; !(i >= lijn.getLengte()) && !(i < 0); i = i + richting) {
 			tijdNaarHalte += lijn.getHalte(i).afstand(eerstVolgende);
 			ETA eta = new ETA(lijn.getHalte(i).name(), lijn.getRichting(i) * richting, tijdNaarHalte);
-//			System.out.println(bericht.lijnNaam + " naar halte" + eta.halteNaam + " t=" + tijdNaarHalte);
 			bericht.ETAs.add(eta);
 			eerstVolgende = lijn.getHalte(i).getPositie();
 		}
@@ -97,12 +97,8 @@ public class Bus {
 		sendBericht(bericht);
 	}
 
-	public void sendBericht(Bericht bericht) {
-		XStream xstream = new XStream();
-		xstream.alias("Bericht", Bericht.class);
-		xstream.alias("ETA", ETA.class);
-		String xml = xstream.toXML(bericht);
-		Producer producer = new Producer();
-		producer.sendBericht(xml);
+	private void sendBericht(Bericht bericht) {
+		Parser parser = new XMLParser();
+		parser.sendBericht(bericht);
 	}
 }
